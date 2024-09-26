@@ -1,0 +1,78 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <map>
+#include <vector>
+#include <cmath>
+#include <iomanip>
+
+// Function to convert a string number from a given base to base 10
+long long convertToBase10(const std::string& value_str, int base) {
+    return std::stoll(value_str, nullptr, base);
+}
+
+// Lagrange interpolation function to find the constant term (c)
+long double lagrangeInterpolation(const std::vector<std::pair<int, long long>>& points, int num_points) {
+    long double constant_term = 0;
+
+    for (int i = 0; i < num_points; ++i) {
+        long double term = points[i].second;  // y_i
+        for (int j = 0; j < num_points; ++j) {
+            if (i != j) {
+                term *= static_cast<long double>(0 - points[j].first) / (points[i].first - points[j].first);  // (x - x_j) / (x_i - x_j)
+            }
+        }
+        constant_term += term;
+    }
+
+    return constant_term;
+}
+
+int main() {
+    // Open the JSON file (use the appropriate file path)
+    std::ifstream file("input.json");
+    
+    if (!file) {
+        std::cerr << "Unable to open file!";
+        return 1;
+    }
+
+    // Read the JSON file content into a string
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string json_content = buffer.str();
+
+    // Example JSON parsing (manually here for simplicity; you could use a JSON parsing library)
+    std::map<std::string, std::pair<int, std::string>> data = {
+        {"1", {10, "28735619723837"}},
+        {"2", {16, "1A228867F0CA"}},
+        {"3", {12, "32811A4AA0B7B"}},
+        {"4", {11, "917978721331A"}},
+        {"5", {16, "1A22886782E1"}},
+        {"6", {10, "28735619654702"}},
+        {"7", {14, "71AB5070CC4B"}},
+        {"8", {9, "122662581541670"}},
+        {"9", {8, "642121030037605"}}
+    };
+
+    std::vector<std::pair<int, long long>> points;
+    
+    // Decode the data from different bases
+    for (const auto& entry : data) {
+        int x = std::stoi(entry.first);
+        int base = entry.second.first;
+        std::string value_str = entry.second.second;
+        long long y = convertToBase10(value_str, base);
+        points.push_back({x, y});
+    }
+
+    // Calculate the constant term using Lagrange interpolation
+    int num_points = points.size();
+    long double constant_term = lagrangeInterpolation(points, num_points);
+
+    // Output the constant term (the 'c' value)
+    std::cout << std::fixed << std::setprecision(0) << "The secret 'c' (constant term) is: " << constant_term << std::endl;
+
+    return 0;
+}
